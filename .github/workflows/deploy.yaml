@@ -1,0 +1,32 @@
+name: Deploy Tqsft WG Admin Cluster Stack
+
+permissions:
+ id-token: write # Required for GitHub to be able to create a token for you to authenticate with AWS
+ contents: read  # Permits your action to read this repo.
+
+on:
+ push:
+   branches:
+     - main
+
+jobs:
+ deploy_wg_admin_stack:
+   runs-on: ubuntu-latest
+   steps:
+     - name: Checkout this repo
+       uses: actions/checkout@v4
+
+     - name: Configure AWS credentials
+       uses: aws-actions/configure-aws-credentials@v4
+       with:
+         role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE }}
+         aws-region: ${{ vars.AWS_TARGET_REGION }}
+         role-session-name: "DeployWgAdmin"
+
+     - name: Deploy TqsftWgAdminStack (via CDK)
+       uses: youyo/aws-cdk-github-actions@v2
+       with:
+         cdk_subcommand: 'deploy'
+         cdk_stack: 'TqsftWgAdminStack'
+         cdk_args: '--parameters WgAdminPassword=${{ vars.WG_ADMIN_PASSWORD }} --parameters WgHost=${{ vars.WG_HOST }} --require-approval never' 
+         actions_comment: false

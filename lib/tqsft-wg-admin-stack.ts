@@ -26,7 +26,7 @@ export class TqsftWgAdminStack extends cdk.Stack {
     })
 
     // Parameters required
-    const vpcId = cdk.Fn.importValue('Tqsft-VpcId');
+    const vpcId = StringParameter.valueFromLookup(this, 'TqsftStack-VpcId');
     const nlbArn = cdk.Fn.importValue('TqsftStack-NLBArn');
     const nlbSgId = cdk.Fn.importValue('TqsftStack-NLBSG');
     const dnsNsId = cdk.Fn.importValue('TqsftStack-NsId');
