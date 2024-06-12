@@ -27,6 +27,7 @@ export class TqsftWgAdminStack extends cdk.Stack {
 
     // Parameters required
     const vpcId = StringParameter.valueFromLookup(this, 'TqsftStack-VpcId');
+    const ecsClusterName = cdk.Fn.importValue('TqsftStack-ClusterName');
     const nlbArn = cdk.Fn.importValue('TqsftStack-NLBArn');
     const nlbSgId = cdk.Fn.importValue('TqsftStack-NLBSG');
     const dnsNsId = cdk.Fn.importValue('TqsftStack-NsId');
@@ -41,7 +42,7 @@ export class TqsftWgAdminStack extends cdk.Stack {
     const s3Bucket = Bucket.fromBucketName(this, "EcsClustersSpace", "ecs-clusters-space");
 
     const ecsCluster = Cluster.fromClusterAttributes(this, "ecsCluster", {
-      clusterName: "Ec2Cluster",
+      clusterName: ecsClusterName,
       vpc: vpc,
       securityGroups: [  ]
     })
