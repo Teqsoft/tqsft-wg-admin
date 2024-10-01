@@ -28,13 +28,13 @@ export class TqsftWgAdminStack extends cdk.Stack {
     // Parameters required
     const vpcId = StringParameter.valueFromLookup(this, 'TqsftStack-VpcId');
     const ecsClusterName = cdk.Fn.importValue('TqsftStack-ClusterName');
-    const nlbArn = cdk.Fn.importValue('TqsftStack-NLBArn');
-    const nlbSgId = cdk.Fn.importValue('TqsftStack-NLBSG');
+    // const nlbArn = cdk.Fn.importValue('TqsftStack-NLBArn');
+    // const nlbSgId = cdk.Fn.importValue('TqsftStack-NLBSG');
     const dnsNsId = cdk.Fn.importValue('TqsftStack-NsId');
     const dnsNsArn = cdk.Fn.importValue('TqsftStack-NsArn');
     const dnsNsName = cdk.Fn.importValue('TqsftStack-NsName');
     
-    const nlbSg = SecurityGroup.fromSecurityGroupId(this, 'NLB-SG', nlbSgId)
+    // const nlbSg = SecurityGroup.fromSecurityGroupId(this, 'NLB-SG', nlbSgId)
     const vpc = Vpc.fromLookup(this, "vpc", {
       vpcId: vpcId
     });
@@ -135,6 +135,7 @@ export class TqsftWgAdminStack extends cdk.Stack {
         'arn:aws:s3:::ecs-clusters-space/*'
       ]
     }));
+    //s3Bucket.grantReadWrite(wgAdminTaskDef.taskRole);
 
     const wgAdminService = new Ec2Service(this, 'WgAdminService', {
       serviceName: 'WgAdminService',
@@ -146,10 +147,6 @@ export class TqsftWgAdminStack extends cdk.Stack {
         PlacementStrategy.packedByCpu(),
       ],
       capacityProviderStrategies: [
-        // {
-        //   capacityProvider: "BottlerocketCapProvider",
-        //   weight: 1,
-        // },
         {
           capacityProvider: "AL2023AsgCapProvider",
           weight: 1,
@@ -166,69 +163,68 @@ export class TqsftWgAdminStack extends cdk.Stack {
     wgAdminService.connections.allowFromAnyIpv4(Port.tcp(51821));
     wgAdminService.connections.allowFromAnyIpv4(Port.udp(10443));
 
-    const nlb = NetworkLoadBalancer.fromNetworkLoadBalancerAttributes(this, 'Tqsft-NLB', {
-      // loadBalancerArn: `arn:aws:elasticloadbalancing:${process.env.CDK_DEFAULT_REGION}:${process.env.CDK_DEFAULT_ACCOUNT}:${nlbArn}`
-      loadBalancerArn: nlbArn
-    })
+    // const nlb = NetworkLoadBalancer.fromNetworkLoadBalancerAttributes(this, 'Tqsft-NLB', {
+    //   loadBalancerArn: nlbArn
+    // })
 
-    const nlbWgAdminListener = nlb.addListener('WgAdminListener', {
-      port: 10443,
-      protocol: ProtocolELB.UDP
-    });
+    // const nlbWgAdminListener = nlb.addListener('WgAdminListener', {
+    //   port: 10443,
+    //   protocol: ProtocolELB.UDP
+    // });
 
-    const nlbWgAdminHttpListener = nlb.addListener('WgAdminHttpListener', {
-      port: 8080,
-      protocol: ProtocolELB.TCP
-    });
+    // const nlbWgAdminHttpListener = nlb.addListener('WgAdminHttpListener', {
+    //   port: 8080,
+    //   protocol: ProtocolELB.TCP
+    // });
 
-    const wgAdminTargetGroup = new NetworkTargetGroup(this, 'WgAdminTarget', {
-      targetGroupName: "WgAdminTargetGroup",
-      port: 10443,
-      targets: [
-        wgAdminService.loadBalancerTarget({
-          containerName: "WgAdmin",
-          containerPort: 10443,
-          protocol: Protocol.UDP
-        })
-      ],
-      protocol: ProtocolELB.UDP,
-      vpc: vpc,
-      healthCheck: {
-        path: "/",
-        protocol: ProtocolELB.HTTP,
-        port: "51821",
-        healthyHttpCodes: "200-299"
-      }
-    })
+    // const wgAdminTargetGroup = new NetworkTargetGroup(this, 'WgAdminTarget', {
+    //   targetGroupName: "WgAdminTargetGroup",
+    //   port: 10443,
+    //   targets: [
+    //     wgAdminService.loadBalancerTarget({
+    //       containerName: "WgAdmin",
+    //       containerPort: 10443,
+    //       protocol: Protocol.UDP
+    //     })
+    //   ],
+    //   protocol: ProtocolELB.UDP,
+    //   vpc: vpc,
+    //   healthCheck: {
+    //     path: "/",
+    //     protocol: ProtocolELB.HTTP,
+    //     port: "51821",
+    //     healthyHttpCodes: "200-299"
+    //   }
+    // })
 
-    const wgAdminHttpTargetGroup = new NetworkTargetGroup(this, 'WgAdminHttpTarget', {
-      targetGroupName: "WgAdminHttpTargetGroup",
-      port: 8080,
-      targets: [
-        wgAdminService.loadBalancerTarget({
-          containerName: "WgAdmin",
-          containerPort: 51821,
-          protocol: Protocol.TCP
-        })
-      ],
-      vpc: vpc,
-      protocol: ProtocolELB.TCP
-    })
+    // const wgAdminHttpTargetGroup = new NetworkTargetGroup(this, 'WgAdminHttpTarget', {
+    //   targetGroupName: "WgAdminHttpTargetGroup",
+    //   port: 8080,
+    //   targets: [
+    //     wgAdminService.loadBalancerTarget({
+    //       containerName: "WgAdmin",
+    //       containerPort: 51821,
+    //       protocol: Protocol.TCP
+    //     })
+    //   ],
+    //   vpc: vpc,
+    //   protocol: ProtocolELB.TCP
+    // })
 
-    nlbWgAdminListener.addTargetGroups('WgAdminTarget', wgAdminTargetGroup)
-    nlbWgAdminHttpListener.addTargetGroups('WgAdminHttpTarget', wgAdminHttpTargetGroup)
+    // nlbWgAdminListener.addTargetGroups('WgAdminTarget', wgAdminTargetGroup)
+    // nlbWgAdminHttpListener.addTargetGroups('WgAdminHttpTarget', wgAdminHttpTargetGroup)
 
-    nlbSg.addIngressRule(
-      Peer.anyIpv4(), 
-      Port.tcp(8080), 
-      "Ingress for HTTPS"
-    )
+    // nlbSg.addIngressRule(
+    //   Peer.anyIpv4(), 
+    //   Port.tcp(8080), 
+    //   "Ingress for HTTPS"
+    // )
 
-    nlbSg.addIngressRule(
-      Peer.anyIpv4(), 
-      Port.udp(10443), 
-      "Ingress for HTTPS"
-    )
+    // nlbSg.addIngressRule(
+    //   Peer.anyIpv4(), 
+    //   Port.udp(10443), 
+    //   "Ingress for HTTPS"
+    // )
 
   }
 }
